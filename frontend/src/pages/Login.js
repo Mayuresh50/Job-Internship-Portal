@@ -1,0 +1,69 @@
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
+
+const Login = () => {
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const { login } = useAuth();
+  const navigate = useNavigate();
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    try {
+      const response = await api.post('/auth/login', formData);
+      login(response.data.token, response.data.user);
+      navigate(response.data.user.role === 'student' ? '/student' : '/recruiter');
+    } catch (error) {
+      setError(error.response?.data?.message || 'Login failed');
+    }
+  };
+
+  return (
+    <div className="container">
+      <div style={{ maxWidth: '400px', margin: '50px auto' }}>
+        <div className="card">
+          <h2>Login</h2>
+          {error && <div style={{ color: 'red', marginBottom: '15px' }}>{error}</div>}
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>Password</label>
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ width: '100%' }}>
+              Login
+            </button>
+          </form>
+          <p style={{ marginTop: '15px', textAlign: 'center' }}>
+            Don't have an account? <Link to="/signup">Sign up</Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Login;
